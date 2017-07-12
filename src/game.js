@@ -53,24 +53,23 @@ export class Game {
     this.isGaming = true
     this.draw()
 
-    let self = this
     this.stiv = window.setInterval(() => {
-      if (self.isGaming) {
-        let tail = self.player.move()
-        let h = self.player.head
-        if (self.map.map[h.x][h.y] == 1 && !self.player.isPreparing) {
-          self.gameover()
-        } else if (self.map.map[h.x][h.y] == 2) {
-          self.player.isGrowing++
-            self.createPoints()
+      if (this.isGaming) {
+        let tail = this.player.move()
+        let h = this.player.head
+        if (this.map.map[h.x][h.y] == 1 && !this.player.isPreparing) {
+          this.gameover()
+        } else if (this.map.map[h.x][h.y] == 2) {
+          this.player.isGrowing++
+            this.createPoints()
         } else {
-          self.map.map[h.x][h.y] = 1
+          this.map.map[h.x][h.y] = 1
         }
         if (tail) {
-          self.map.map[tail.x][tail.y] = 0
+          this.map.map[tail.x][tail.y] = 0
         }
       }
-      self.draw()
+      this.draw()
     }, REFRESH_SPEED)
   }
 
@@ -108,24 +107,23 @@ export class Game {
   }
 
   addListener() {
-    let self = this
-    window.document.onkeydown = function (e) {
-      if (!self.player) {
+    window.document.onkeydown = (e) => {
+      if (!this.player) {
         return
       }
-      self.player.isPreparing = false
+      this.player.isPreparing = false
       switch (e.code) {
       case 'KeyW':
-        if (self.player.nowFace != 'down') self.player.face = 'up';
+        if (this.player.nowFace != 'down') this.player.face = 'up';
         break
       case 'KeyS':
-        if (self.player.nowFace != 'up') self.player.face = 'down';
+        if (this.player.nowFace != 'up') self.player.face = 'down';
         break
       case 'KeyA':
-        if (self.player.nowFace != 'right') self.player.face = 'left';
+        if (this.player.nowFace != 'right') this.player.face = 'left';
         break
       case 'KeyD':
-        if (self.player.nowFace != 'left') self.player.face = 'right';
+        if (this.player.nowFace != 'left') this.player.face = 'right';
         break
       }
     }
