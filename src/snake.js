@@ -1,4 +1,4 @@
-class Snake {
+export class Snake {
   constructor(x, y) {
     this.isGrowing = 3
     this.isPreparing = true
@@ -38,4 +38,3 @@ class Snake {
     }
   }
 }
-export default Snake

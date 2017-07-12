@@ -1,4 +1,4 @@
-import Snake from './snake'
+import { Snake } from './snake'
 
 export const BLOCK_LENGTH = 20
 export const REFRESH_SPEED = 120
@@ -60,8 +60,8 @@ export class Game {
         if (this.map.map[h.x][h.y] == 1 && !this.player.isPreparing) {
           this.gameover()
         } else if (this.map.map[h.x][h.y] == 2) {
+          this.createPoints()
           this.player.isGrowing++
-            this.createPoints()
         } else {
           this.map.map[h.x][h.y] = 1
         }
@@ -117,7 +117,7 @@ export class Game {
         if (this.player.nowFace != 'down') this.player.face = 'up';
         break
       case 'KeyS':
-        if (this.player.nowFace != 'up') self.player.face = 'down';
+        if (this.player.nowFace != 'up') this.player.face = 'down';
         break
       case 'KeyA':
         if (this.player.nowFace != 'right') this.player.face = 'left';
