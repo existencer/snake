@@ -8,6 +8,7 @@
 
 <body>
     <div id="game"></div>
+    <div id="scoreboard"></div>
 </body>
 <style>
     #game>canvas {
@@ -16,6 +17,20 @@
     
     #game {
         margin: auto;
+    }
+    
+    #scoreboard {
+        position: fixed;
+        right: 100px;
+        width: 200px;
+        top: 100px;
+        background: #EFEFEF;
+        padding: 20px;
+        color: #999;
+    }
+    
+    #scoreboard>li {
+        list-style: none;
     }
 </style>
 <script src="./build/app.bundle.js"></script>

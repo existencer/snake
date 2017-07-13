@@ -1,12 +1,43 @@
 import { Snake } from './snake'
+import { Map } from './Map'
 
 export const BLOCK_LENGTH = 20
 export const REFRESH_SPEED = 120
 export const SQUARE_SIDE_LENGTH = 800
 export class Game {
-  constructor(ele, map) {
+  constructor(ele, socket, data) {
     this._element = ele
-    this.init(map)
+    this.socket = socket
+    this.players = {}
+
+    const renewPlayers = (data) => {
+      this._scoreEle.innerHTML = ''
+      for (let i in data.players) {
+        let e = window.document.createElement('li')
+        e.innerHTML = data.players[i].name + ':' + data.players[i].score
+        this._scoreEle.appendChild(e)
+        if (data.players[i].died) {
+          this.players[i] = null
+          continue
+        }
+        this.players[i] = new Snake(data.players[i].snake.head.x, data.players[i].snake.head.y, data.players[i].snake.body)
+      }
+    }
+
+    this.socket.on('newState', data => {
+      console.log(data)
+      this.ticks = data.ticks
+      this.map = new Map(data.map)
+      renewPlayers(data)
+    })
+
+    this.name = data.name
+    this.sessionId = data.sessionId
+    this.ticks = data.ticks
+    this.init(new Map(data.map))
+
+    renewPlayers(data)
+
     this.start()
   }
 
@@ -26,51 +57,13 @@ export class Game {
     this.mapHeight = BLOCK_LENGTH * this.y
     this.k = SQUARE_SIDE_LENGTH / Math.max(this.mapWidth, this.mapHeight)
 
-    this.isGaming = false
-  }
-
-  createPoints() {
-    let x, y
-    do {
-      x = parseInt(Math.random() * (this.x - 2) + 1)
-      y = parseInt(Math.random() * (this.y - 2) + 1)
-    }
-    while (this.map.map[x][y])
-    this.map.map[x][y] = 2
+    this._scoreEle = window.document.getElementById('scoreboard')
   }
 
   start() {
-    let x, y
-    do {
-      x = parseInt(Math.random() * (this.x - 2) + 1)
-      y = parseInt(Math.random() * (this.y - 2) + 1)
-    }
-    while (this.map.map[x][y])
-    this.player = new Snake(x, y)
     this.addListener()
-    this.map.map[x][y] = 1
-    this.createPoints()
-    this.isGaming = true
     this.draw()
-
-    this.stiv = window.setInterval(() => {
-      if (this.isGaming) {
-        let tail = this.player.move()
-        let h = this.player.head
-        if (this.map.map[h.x][h.y] == 1 && !this.player.isPreparing) {
-          this.gameover()
-        } else if (this.map.map[h.x][h.y] == 2) {
-          this.createPoints()
-          this.player.isGrowing++
-        } else {
-          this.map.map[h.x][h.y] = 1
-        }
-        if (tail) {
-          this.map.map[tail.x][tail.y] = 0
-        }
-      }
-      this.draw()
-    }, REFRESH_SPEED)
+    this.int = window.setInterval(() => { this.draw() }, REFRESH_SPEED)
   }
 
   draw() {
@@ -80,27 +73,39 @@ export class Game {
     ctx.clearRect(0, 0, SQUARE_SIDE_LENGTH, SQUARE_SIDE_LENGTH)
     for (let i = 0; i < this.x; i++) {
       for (let j = 0; j < this.y; j++) {
-        let v = this.map.map[i][j]
+        let v = this.map.map[i][j].entity
         if (v == 1) {
           ctx.fillStyle = '#999'
-        } else if (v == 2) {
+        } else if (v == -1) {
           ctx.fillStyle = '#d00'
-        } else {
+        } else if (v == 0) {
           ctx.fillStyle = '#FFF'
         }
-        ctx.fillRect(i * 20, j * 20, 19, 19)
+        ctx.fillRect(i * BLOCK_LENGTH, j * BLOCK_LENGTH, 19, 19)
       }
     }
 
-    let p = this.player
-    if (this.isGaming) {
+    for (let i in this.players) {
+      let p = this.players[i]
+      if (!p) {
+        continue
+      }
       let h = p.head
       let b = p.body
-      ctx.fillStyle = '#060'
-      ctx.fillRect(h.x * 20, h.y * 20, 19, 19)
-      ctx.fillStyle = '#090'
-      for (let i = 0; i < b.length; i++) {
-        ctx.fillRect(b[i].x * 20, b[i].y * 20, 19, 19)
+      if (i == this.sessionId) {
+        ctx.fillStyle = '#060'
+        ctx.fillRect(h.x * BLOCK_LENGTH, h.y * BLOCK_LENGTH, BLOCK_LENGTH - 1, BLOCK_LENGTH - 1)
+        ctx.fillStyle = '#090'
+        for (let i = 0; i < b.length; i++) {
+          ctx.fillRect(b[i].x * BLOCK_LENGTH, b[i].y * BLOCK_LENGTH, BLOCK_LENGTH - 1, BLOCK_LENGTH - 1)
+        }
+      } else {
+        ctx.fillStyle = '#A33'
+        ctx.fillRect(h.x * BLOCK_LENGTH, h.y * BLOCK_LENGTH, BLOCK_LENGTH - 1, BLOCK_LENGTH - 1)
+        ctx.fillStyle = '#E66'
+        for (let i = 0; i < b.length; i++) {
+          ctx.fillRect(b[i].x * BLOCK_LENGTH, b[i].y * BLOCK_LENGTH, BLOCK_LENGTH - 1, BLOCK_LENGTH - 1)
+        }
       }
     }
     ctx.restore()
@@ -108,34 +113,20 @@ export class Game {
 
   addListener() {
     window.document.onkeydown = (e) => {
-      if (!this.player) {
-        return
-      }
-      this.player.isPreparing = false
       switch (e.code) {
       case 'KeyW':
-        if (this.player.nowFace != 'down') this.player.face = 'up';
+        this.socket.emit('playerOperate', { forwards: 'up' })
         break
       case 'KeyS':
-        if (this.player.nowFace != 'up') this.player.face = 'down';
+        this.socket.emit('playerOperate', { forwards: 'down' })
         break
       case 'KeyA':
-        if (this.player.nowFace != 'right') this.player.face = 'left';
+        this.socket.emit('playerOperate', { forwards: 'left' })
         break
       case 'KeyD':
-        if (this.player.nowFace != 'left') this.player.face = 'right';
+        this.socket.emit('playerOperate', { forwards: 'right' })
         break
       }
     }
-  }
-
-  gameover() {
-    this.isGaming = false
-    for (let i = 0; i < this.player.body.length; i++) {
-      let b = this.player.body[i]
-      this.map.map[b.x][b.y] = 0
-    }
-    this.player = null
-    alert('GameOver')
   }
 }

@@ -1,11 +1,15 @@
 export class Snake {
-  constructor(x, y) {
-    this.isGrowing = 3
-    this.isPreparing = true
-    this.face = 'up'
-    this.nowFace = 'up'
+  constructor(x, y, body) {
+    this.isGrowing = 0
+    this.face = ''
+    this.nowFace = ''
     this.head = { x, y }
     this.body = []
+    if (body && body.length > 0) {
+      body.forEach((v) => {
+        this.body.push(v)
+      })
+    }
   }
 
   move() {
