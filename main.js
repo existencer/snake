@@ -1,5 +1,6 @@
 import { Game } from './src/game'
 import io from 'socket.io-client'
+
 let socket = window.socket = io({
   transports: ['websocket']
 })

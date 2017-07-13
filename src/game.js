@@ -11,6 +11,7 @@ export class Game {
     this.players = {}
 
     const renewPlayers = (data) => {
+      // console.log(data)
       this._scoreEle.innerHTML = ''
       for (let i in data.players) {
         let e = window.document.createElement('li')
@@ -25,10 +26,13 @@ export class Game {
     }
 
     this.socket.on('newState', data => {
-      console.log(data)
+      // console.log(data)
       this.ticks = data.ticks
       this.map = new Map(data.map)
       renewPlayers(data)
+    })
+    this.socket.on('playerDie', () => {
+      window.alert('Game over')
     })
 
     this.name = data.name
@@ -77,7 +81,7 @@ export class Game {
         if (v == 1) {
           ctx.fillStyle = '#999'
         } else if (v == -1) {
-          ctx.fillStyle = '#d00'
+          ctx.fillStyle = '#DA0'
         } else if (v == 0) {
           ctx.fillStyle = '#FFF'
         }
